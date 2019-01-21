@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/centerImage"
+            android:layout_width="128dp"
+            android:layout_height="128dp"
+            android:layout_marginTop="100dp"
+            android:layout_centerHorizontal="true"
+            android:clickable="true"
+            android:contentDescription="@string/myo"
+            android:src="@mipmap/myo" />
+
+        <ImageView
+            android:id="@+id/circle"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="139dp"
+            android:clickable="true"
+            android:contentDescription="@string/myo"
+            android:src="@drawable/shape" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:id="@+id/search_label"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="270dp"
+            android:layout_centerHorizontal="true"
+            android:textColor="@color/colorMain"
+            android:text="@string/looking_for_myo"/>
+
+        <TextView
+            android:id="@+id/connect_label"
+            android:layout_width="wrap_content"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="300dp"
+            android:layout_centerHorizontal="true"
+            android:text="@string/connecting"/>
+
+        <TextView
+            android:id="@+id/stream_label"
+            android:layout_width="wrap_content"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="330dp"
+            android:layout_centerHorizontal="true"
+            android:text="@string/streaming"/>
+
+        <ImageView
+            android:id="@+id/gesture_image"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="400dp"
+            android:clickable="true"
+            android:contentDescription="@string/gesture_image" />
+
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>

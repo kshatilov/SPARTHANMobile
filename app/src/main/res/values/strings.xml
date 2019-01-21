@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">SparthanMobile</string>
+    <string name="connect_button_label">Connect</string>
+    <string name="stream_button_label">STREAM</string>
+    <string name="myo">myo</string>
+    <string name="looking_for_myo">Looking for MYO</string>
+    <string name="connecting">Connecting</string>
+    <string name="streaming">Streaming</string>
+    <string name="gesture_image">gesture image</string>
+    <string name="stream">Stream</string>
+</resources>
