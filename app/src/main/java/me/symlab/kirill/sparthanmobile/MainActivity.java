@@ -4,10 +4,14 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.LightingColorFilter;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
@@ -55,13 +59,17 @@ public class MainActivity extends Activity {
 
     /* GESTURES */
     static Map<Long, Integer> gestures = new HashMap<>();
+
     static {
-        gestures.put(0L, R.mipmap.fist);
-        gestures.put(1L, R.mipmap.palm);
-        gestures.put(2L, R.mipmap.thumb);
-        gestures.put(3L, R.mipmap.point);
-        gestures.put(4L, R.mipmap.midfng);
+        gestures.put(0L, R.id.fist);
+        gestures.put(1L, R.id.palm);
+        gestures.put(2L, R.id.thumb);
+        gestures.put(3L, R.id.point);
+        gestures.put(4L, R.id.peace);
     }
+
+    private Animation expandAnimation;
+    private int activeId = -1;
 
 
     @SuppressLint("CheckResult")
@@ -73,7 +81,6 @@ public class MainActivity extends Activity {
         TextView searchLabel = findViewById(R.id.search_label);
         TextView connectLabel = findViewById(R.id.connect_label);
         TextView streamLabel = findViewById(R.id.stream_label);
-        ImageView gestureImage = findViewById(R.id.gesture_image);
 
         getWindow().getDecorView().setBackgroundColor(Color.WHITE);
         Animation connectingAnimation = AnimationUtils.loadAnimation(this, R.anim.animation);
@@ -81,6 +88,8 @@ public class MainActivity extends Activity {
         circle.startAnimation(connectingAnimation);
         circle.setOnClickListener(view -> view.startAnimation(connectingAnimation));
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+
+        expandAnimation = AnimationUtils.loadAnimation(this, R.anim.a2);
 
         // LOADING MODEL
         try {
@@ -148,10 +157,39 @@ public class MainActivity extends Activity {
                 tflite.run(inp, out);
                 long endTime = SystemClock.uptimeMillis();
                 final int id = gestures.get(out[0][0]);
-                runOnUiThread(() -> gestureImage.setBackgroundResource(id));
+                runOnUiThread(() -> {
+                    highlightGesture(id);
+                });
                 out = new long[BATCH_SIZE][1];
 
             }
         }, interval, interval);
+    }
+
+    private void highlightGesture(int id) {
+        if (activeId == id) {
+            return;
+        }
+        activeId = id;
+        //dim others
+        for (int _id : new int[]{
+                R.id.fist,
+                R.id.palm,
+                R.id.peace,
+                R.id.point,
+                R.id.thumb
+        }) {
+            ImageView v = findViewById(_id);
+            if (v != null) {
+                v.setColorFilter(getResources().getColor(R.color.colorInactive, getTheme()));
+                v.setAnimation(null);
+            }
+        }
+        //highlight the one
+        ImageView v = findViewById(id);
+        if (v != null) {
+            v.setColorFilter(getResources().getColor(R.color.colorMain, getTheme()));
+            v.startAnimation(expandAnimation);
+        }
     }
 }

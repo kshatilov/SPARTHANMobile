@@ -61,14 +61,61 @@
             android:layout_centerHorizontal="true"
             android:text="@string/streaming"/>
 
-        <ImageView
-            android:id="@+id/gesture_image"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="400dp"
-            android:clickable="true"
-            android:contentDescription="@string/gesture_image" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true">
+            <ImageView
+                android:id="@+id/fist"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="400dp"
+                android:clickable="true"
+                android:tint="@color/colorInactive"
+                android:src="@mipmap/fist"
+                android:layout_marginBottom="20dp"
+                android:layout_marginLeft="5dp"
+                />
+            <ImageView
+                android:id="@+id/thumb"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="400dp"
+                android:clickable="true"
+                android:tint="@color/colorInactive"
+                android:layout_marginBottom="20dp"
+                android:src="@mipmap/thumb"/>
+            <ImageView
+                android:id="@+id/palm"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="400dp"
+                android:clickable="true"
+                android:tint="@color/colorInactive"
+                android:layout_marginBottom="20dp"
+                android:src="@mipmap/palm"/>
+            <ImageView
+                android:id="@+id/point"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="400dp"
+                android:clickable="true"
+                android:tint="@color/colorInactive"
+                android:layout_marginBottom="20dp"
+                android:src="@mipmap/point"/>
+            <ImageView
+                android:id="@+id/peace"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="400dp"
+                android:clickable="true"
+                android:tint="@color/colorInactive"
+                android:layout_marginBottom="20dp"
+                android:src="@mipmap/peace"
+                android:layout_marginRight="5dp"/>
+        </LinearLayout>
+
+
 
     </RelativeLayout>
 
