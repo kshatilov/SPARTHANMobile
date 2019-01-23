@@ -38,5 +38,6 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.x.y'
     implementation 'org.tensorflow:tensorflow-lite:0.0.0-nightly'
     implementation 'org.apache.commons:commons-collections4:+'
+    implementation 'com.koushikdutta.async:androidasync:2.+'
     implementation group: 'uk.me.berndporr', name:'iirj', version: '1.1'
 }

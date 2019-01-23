@@ -4,19 +4,16 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Color;
-import android.graphics.ColorFilter;
-import android.graphics.LightingColorFilter;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
-import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.ncorti.myonnaise.Myo;
 import com.ncorti.myonnaise.MyoStatus;
 import com.ncorti.myonnaise.Myonnaise;
@@ -58,14 +55,22 @@ public class MainActivity extends Activity {
     private long[][] out;
 
     /* GESTURES */
-    static Map<Long, Integer> gestures = new HashMap<>();
-
+    static Map<Long, Integer> gesturesImages = new HashMap<>();
     static {
-        gestures.put(0L, R.id.fist);
-        gestures.put(1L, R.id.palm);
-        gestures.put(2L, R.id.thumb);
-        gestures.put(3L, R.id.point);
-        gestures.put(4L, R.id.peace);
+        gesturesImages.put(0L, R.id.fist);
+        gesturesImages.put(1L, R.id.palm);
+        gesturesImages.put(2L, R.id.thumb);
+        gesturesImages.put(3L, R.id.point);
+        gesturesImages.put(4L, R.id.peace);
+    }
+    String gesture;
+    static Map<Long, String> gesturesLabels = new HashMap<>();
+    static {
+        gesturesLabels.put(0L,"FIST");
+        gesturesLabels.put(1L, "PALM");
+        gesturesLabels.put(2L, "THUMB");
+        gesturesLabels.put(3L, "POINT");
+        gesturesLabels.put(4L, "PEACE");
     }
 
     private Animation expandAnimation;
@@ -82,14 +87,19 @@ public class MainActivity extends Activity {
         TextView connectLabel = findViewById(R.id.connect_label);
         TextView streamLabel = findViewById(R.id.stream_label);
 
+        // GUI
         getWindow().getDecorView().setBackgroundColor(Color.WHITE);
         Animation connectingAnimation = AnimationUtils.loadAnimation(this, R.anim.animation);
         ImageView circle = findViewById(R.id.circle);
         circle.startAnimation(connectingAnimation);
         circle.setOnClickListener(view -> view.startAnimation(connectingAnimation));
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-
         expandAnimation = AnimationUtils.loadAnimation(this, R.anim.a2);
+
+        //HTTP Server
+        AsyncHttpServer server = new AsyncHttpServer();
+        server.get("/", (request, response) -> response.send(gesture));
+        server.listen(5000);
 
         // LOADING MODEL
         try {
@@ -156,7 +166,8 @@ public class MainActivity extends Activity {
                 long startTime = SystemClock.uptimeMillis();
                 tflite.run(inp, out);
                 long endTime = SystemClock.uptimeMillis();
-                final int id = gestures.get(out[0][0]);
+                final int id = gesturesImages.get(out[0][0]);
+                gesture = gesturesLabels.get(out[0][0]);
                 runOnUiThread(() -> {
                     highlightGesture(id);
                 });
