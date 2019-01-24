@@ -8,4 +8,6 @@
     <string name="streaming">Streaming</string>
     <string name="gesture_image">gesture image</string>
     <string name="stream">Stream</string>
+    <string name="switch_label_text">Use cloud</string>
+    <string name="SERVER_UNAVAILABLE">Server unavailable</string>
 </resources>

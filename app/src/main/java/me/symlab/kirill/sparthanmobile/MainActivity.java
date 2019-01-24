@@ -3,6 +3,7 @@ package me.symlab.kirill.sparthanmobile;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,14 +12,21 @@ import android.util.Log;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.koushikdutta.async.http.AsyncHttpClient;
+import com.koushikdutta.async.http.AsyncHttpPost;
+import com.koushikdutta.async.http.AsyncHttpResponse;
+import com.koushikdutta.async.http.body.MultipartFormDataBody;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.ncorti.myonnaise.Myo;
 import com.ncorti.myonnaise.MyoStatus;
 import com.ncorti.myonnaise.Myonnaise;
 
 import org.apache.commons.collections4.queue.CircularFifoQueue;
+import org.json.JSONArray;
 import org.tensorflow.lite.Interpreter;
 
 import java.io.IOException;
@@ -42,7 +50,27 @@ public class MainActivity extends Activity {
     private static int IMG_Y = 8;
     private static int BATCH_SIZE = 1;
     private static int MYO_POLLING_FREQUENCY = 200;
-    private static int CLASSIFICATION_INTERVAL = 300;
+    private static int CLASSIFICATION_INTERVAL = 600;
+    private String P2C_SERVER_URI = "http://192.168.137.1/";
+    private int P2B_SERVER_PORT = 5000;
+
+    public enum GESTURES {
+        POINT("POINT"),
+        PEACE("PEACE"),
+        THUMB("THUMB"),
+        FIST("FIST"),
+        PALM("PALM");
+        private final String label;
+
+        GESTURES(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
 
     /* MYO */
     Myo myo = null;
@@ -55,26 +83,30 @@ public class MainActivity extends Activity {
     private long[][] out;
 
     /* GESTURES */
-    static Map<Long, Integer> gesturesImages = new HashMap<>();
+    static Map<GESTURES, Integer> gesturesImages = new HashMap<>();
+
     static {
-        gesturesImages.put(0L, R.id.fist);
-        gesturesImages.put(1L, R.id.palm);
-        gesturesImages.put(2L, R.id.thumb);
-        gesturesImages.put(3L, R.id.point);
-        gesturesImages.put(4L, R.id.peace);
+        gesturesImages.put(GESTURES.FIST, R.id.fist);
+        gesturesImages.put(GESTURES.PALM, R.id.palm);
+        gesturesImages.put(GESTURES.THUMB, R.id.thumb);
+        gesturesImages.put(GESTURES.POINT, R.id.point);
+        gesturesImages.put(GESTURES.PEACE, R.id.peace);
     }
+
     String gesture;
-    static Map<Long, String> gesturesLabels = new HashMap<>();
+    static Map<Long, GESTURES> gesturesLabels = new HashMap<>();
+
     static {
-        gesturesLabels.put(0L,"FIST");
-        gesturesLabels.put(1L, "PALM");
-        gesturesLabels.put(2L, "THUMB");
-        gesturesLabels.put(3L, "POINT");
-        gesturesLabels.put(4L, "PEACE");
+        gesturesLabels.put(0L, GESTURES.FIST);
+        gesturesLabels.put(1L, GESTURES.PALM);
+        gesturesLabels.put(2L, GESTURES.THUMB);
+        gesturesLabels.put(3L, GESTURES.POINT);
+        gesturesLabels.put(4L, GESTURES.PEACE);
     }
 
     private Animation expandAnimation;
     private int activeId = -1;
+    private boolean useCloud = false;
 
 
     @SuppressLint("CheckResult")
@@ -95,11 +127,25 @@ public class MainActivity extends Activity {
         circle.setOnClickListener(view -> view.startAnimation(connectingAnimation));
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
         expandAnimation = AnimationUtils.loadAnimation(this, R.anim.a2);
+        Switch cloudSwitch = findViewById(R.id.cloud_switch);
+        cloudSwitch.setTrackTintList(new ColorStateList(new int[][]{
+                new int[]{-android.R.attr.state_checked},
+                new int[]{android.R.attr.state_checked},
+        }, new int[]{
+                getResources().getColor(R.color.colorInactive, getTheme()),
+                getResources().getColor(R.color.colorMain, getTheme())
+        }));
+        cloudSwitch.setOnCheckedChangeListener((_cloudSwitch, isChecked) -> {
+            useCloud = isChecked;
+        });
 
         //HTTP Server
         AsyncHttpServer server = new AsyncHttpServer();
-        server.get("/", (request, response) -> response.send(gesture));
-        server.listen(5000);
+        server.get("/", (request, response) -> response.send(gesture.toString()));
+        server.listen(P2B_SERVER_PORT);
+
+        //HTTP Client
+        final AsyncHttpPost[] post = {new AsyncHttpPost(P2C_SERVER_URI)};
 
         // LOADING MODEL
         try {
@@ -162,17 +208,51 @@ public class MainActivity extends Activity {
                 if (q.size() < IMG_X) {
                     return;
                 }
-                inp = Utils.convertT(q, BATCH_SIZE, IMG_X, IMG_Y);
-                long startTime = SystemClock.uptimeMillis();
-                tflite.run(inp, out);
-                long endTime = SystemClock.uptimeMillis();
-                final int id = gesturesImages.get(out[0][0]);
-                gesture = gesturesLabels.get(out[0][0]);
-                runOnUiThread(() -> {
-                    highlightGesture(id);
-                });
-                out = new long[BATCH_SIZE][1];
 
+                final int[] viewId = new int[1];
+                if (useCloud) {
+                    // Sending package to the cloud server to classify
+                    MultipartFormDataBody body = new MultipartFormDataBody();
+                    JSONArray value = new JSONArray(q);
+                    body.addStringPart("EMG_PACKAGE", value.toString());
+                    post[0].setBody(body);
+                    AsyncHttpClient.getDefaultInstance().executeString(post[0], new AsyncHttpClient.StringCallback() {
+                        @Override
+                        public void onCompleted(Exception ex, AsyncHttpResponse source, String result) {
+                            if (ex != null) {
+                                if (useCloud) {
+                                    runOnUiThread(() ->
+                                            Toast.makeText(getApplicationContext(), getString(R.string.SERVER_UNAVAILABLE), Toast.LENGTH_SHORT).show());
+                                }
+                                post[0] = new AsyncHttpPost(P2C_SERVER_URI);
+                                return;
+                            }
+                            gesture = result;
+                            try {
+                                viewId[0] = gesturesImages.get(GESTURES.valueOf(result));
+                            } catch (IllegalArgumentException e) {
+                                // Received garbage from server
+                                if (useCloud) {
+                                    runOnUiThread(() ->
+                                            Toast.makeText(getApplicationContext(), getString(R.string.SERVER_UNAVAILABLE), Toast.LENGTH_SHORT).show());
+                                }
+                            }
+                            runOnUiThread(() -> {
+                                highlightGesture(viewId[0]);
+                            });
+                        }
+                    });
+                } else {
+                    // Classify gesture locally
+                    inp = Utils.convertT(q, BATCH_SIZE, IMG_X, IMG_Y);
+                    long startTime = SystemClock.uptimeMillis();
+                    tflite.run(inp, out);
+                    long endTime = SystemClock.uptimeMillis();
+                    gesture = gesturesLabels.get(out[0][0]).toString();
+                    viewId[0] = gesturesImages.get(GESTURES.valueOf(gesture));
+                    out = new long[BATCH_SIZE][1];
+                    runOnUiThread(() -> highlightGesture(viewId[0]));
+                }
             }
         }, interval, interval);
     }
