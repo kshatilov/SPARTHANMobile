@@ -140,9 +140,15 @@ public class MainActivity extends Activity {
         });
 
         //HTTP Server
-        AsyncHttpServer server = new AsyncHttpServer();
-        server.get("/", (request, response) -> response.send(gesture.toString()));
-        server.listen(P2B_SERVER_PORT);
+        Handler serverThread = new Handler();
+        serverThread.post(new Runnable() {
+            @Override
+            public void run() {
+                AsyncHttpServer server = new AsyncHttpServer();
+                server.get("/", (request, response) -> response.send(gesture));
+                server.listen(P2B_SERVER_PORT);
+            }
+        });
 
         //HTTP Client
         final AsyncHttpPost[] post = {new AsyncHttpPost(P2C_SERVER_URI)};
@@ -216,6 +222,7 @@ public class MainActivity extends Activity {
                     JSONArray value = new JSONArray(q);
                     body.addStringPart("EMG_PACKAGE", value.toString());
                     post[0].setBody(body);
+                    body.addStringPart("TIME", String.valueOf(SystemClock.uptimeMillis()));
                     AsyncHttpClient.getDefaultInstance().executeString(post[0], new AsyncHttpClient.StringCallback() {
                         @Override
                         public void onCompleted(Exception ex, AsyncHttpResponse source, String result) {
@@ -227,9 +234,18 @@ public class MainActivity extends Activity {
                                 post[0] = new AsyncHttpPost(P2C_SERVER_URI);
                                 return;
                             }
-                            gesture = result;
+                            long start = -1L;
+                            if (result.contains("_")){
+                                String[] splitted = result.split("_");
+                                gesture = splitted[0];
+                                start = Long.parseLong(splitted[1]);
+                            } else {
+                                gesture = result;
+                            }
                             try {
-                                viewId[0] = gesturesImages.get(GESTURES.valueOf(result));
+                                viewId[0] = gesturesImages.get(GESTURES.valueOf(gesture));
+                                long end = SystemClock.uptimeMillis();
+                                Log.d(TAG, String.valueOf(end - start));
                             } catch (IllegalArgumentException e) {
                                 // Received garbage from server
                                 if (useCloud) {
@@ -247,10 +263,11 @@ public class MainActivity extends Activity {
                     inp = Utils.convertT(q, BATCH_SIZE, IMG_X, IMG_Y);
                     long startTime = SystemClock.uptimeMillis();
                     tflite.run(inp, out);
-                    long endTime = SystemClock.uptimeMillis();
                     gesture = gesturesLabels.get(out[0][0]).toString();
                     viewId[0] = gesturesImages.get(GESTURES.valueOf(gesture));
                     out = new long[BATCH_SIZE][1];
+                    long endTime = SystemClock.uptimeMillis();
+//                    Log.d(TAG, String.valueOf(endTime - startTime));
                     runOnUiThread(() -> highlightGesture(viewId[0]));
                 }
             }
