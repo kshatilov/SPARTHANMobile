@@ -120,17 +120,6 @@
                 android:tint="@color/colorInactive" />
         </LinearLayout>
 
-        <Switch
-            android:id="@+id/cloud_switch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="460dp"
-            android:switchPadding="10dp"
-            android:text="@string/switch_label_text"
-            android:textColor="@color/colorInactive"
-            android:thumbTint="@color/colorMain" />
-
         <LinearLayout
             android:id="@+id/settings_button"
             android:layout_width="wrap_content"

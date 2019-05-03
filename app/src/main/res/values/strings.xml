@@ -14,4 +14,5 @@
     <string name="back_label">Back</string>
     <string name="classifiers_label">Classifiers</string>
     <string name="connectivity_label">Connectivity</string>
+    <string name="number_of_gestures_label">Number of gestures:</string>
 </resources>

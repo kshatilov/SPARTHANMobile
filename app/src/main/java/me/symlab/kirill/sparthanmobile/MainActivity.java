@@ -43,6 +43,7 @@ import java.util.TimerTask;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
+import me.symlab.kirill.sparthanmobile.Utils.SettingsStore;
 import me.symlab.kirill.sparthanmobile.Utils.Utils;
 
 public class MainActivity extends Activity {
@@ -110,7 +111,6 @@ public class MainActivity extends Activity {
 
     private Animation expandAnimation;
     private int activeId = -1;
-    private boolean useCloud = false;
 
     private void initCNN() {
         try {
@@ -132,17 +132,6 @@ public class MainActivity extends Activity {
         circle.setOnClickListener(view -> view.startAnimation(connectingAnimation));
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
         expandAnimation = AnimationUtils.loadAnimation(this, R.anim.a2);
-        Switch cloudSwitch = findViewById(R.id.cloud_switch);
-        cloudSwitch.setTrackTintList(new ColorStateList(new int[][]{
-                new int[]{-android.R.attr.state_checked},
-                new int[]{android.R.attr.state_checked},
-        }, new int[]{
-                getResources().getColor(R.color.colorInactive, getTheme()),
-                getResources().getColor(R.color.colorMain, getTheme())
-        }));
-        cloudSwitch.setOnCheckedChangeListener((_cloudSwitch, isChecked) -> {
-            useCloud = isChecked;
-        });
 
         // settings button
         View settingsButton = findViewById(R.id.settings_button);
@@ -235,7 +224,7 @@ public class MainActivity extends Activity {
                 }
 
                 final int[] viewId = new int[1];
-                if (useCloud) {
+                if (SettingsStore.getInstance().useCloud()) {
                     // Sending package to the cloud server to classify
                     MultipartFormDataBody body = new MultipartFormDataBody();
                     JSONArray value = new JSONArray(q);
@@ -246,7 +235,7 @@ public class MainActivity extends Activity {
                         @Override
                         public void onCompleted(Exception ex, AsyncHttpResponse source, String result) {
                             if (ex != null) {
-                                if (useCloud) {
+                                if (SettingsStore.getInstance().useCloud()) {
                                     runOnUiThread(() ->
                                             Toast.makeText(getApplicationContext(), getString(R.string.SERVER_UNAVAILABLE), Toast.LENGTH_SHORT).show());
                                 }
@@ -267,7 +256,7 @@ public class MainActivity extends Activity {
                                 Log.d(TAG, String.valueOf(end - start));
                             } catch (IllegalArgumentException e) {
                                 // Received garbage from server
-                                if (useCloud) {
+                                if (SettingsStore.getInstance().useCloud()) {
                                     runOnUiThread(() ->
                                             Toast.makeText(getApplicationContext(), getString(R.string.SERVER_UNAVAILABLE), Toast.LENGTH_SHORT).show());
                                 }
@@ -302,13 +291,13 @@ public class MainActivity extends Activity {
         // GUI
         this.initGUI();
         //Networking
-//        this.initComms();
+        this.initComms();
         // LOADING MODEL
-//        this.initCNN();
+        this.initCNN();
         // MYO
-//        this.initMYO();
+        this.initMYO();
         // CLASSIFICATION ROUTINE
-//        this.startCR();
+        this.startCR();
     }
 
     private void highlightGesture(int id) {
