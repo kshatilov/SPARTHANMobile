@@ -10,4 +10,8 @@
     <string name="stream">Stream</string>
     <string name="switch_label_text">Use cloud</string>
     <string name="SERVER_UNAVAILABLE">Server unavailable</string>
+    <string name="settings_label">Settings</string>
+    <string name="back_label">Back</string>
+    <string name="classifiers_label">Classifiers</string>
+    <string name="connectivity_label">Connectivity</string>
 </resources>

@@ -15,8 +15,8 @@
             android:id="@+id/centerImage"
             android:layout_width="128dp"
             android:layout_height="128dp"
-            android:layout_marginTop="100dp"
             android:layout_centerHorizontal="true"
+            android:layout_marginTop="100dp"
             android:clickable="true"
             android:contentDescription="@string/myo"
             android:src="@mipmap/myo" />
@@ -32,100 +32,133 @@
             android:src="@drawable/shape" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:textSize="20sp"
-            android:textStyle="bold"
             android:id="@+id/search_label"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="270dp"
             android:layout_centerHorizontal="true"
+            android:layout_marginTop="270dp"
+            android:text="@string/looking_for_myo"
             android:textColor="@color/colorMain"
-            android:text="@string/looking_for_myo"/>
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/connect_label"
             android:layout_width="wrap_content"
-            android:textSize="20sp"
-            android:textStyle="bold"
             android:layout_height="wrap_content"
-            android:layout_marginTop="300dp"
             android:layout_centerHorizontal="true"
-            android:text="@string/connecting"/>
+            android:layout_marginTop="300dp"
+            android:text="@string/connecting"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/stream_label"
             android:layout_width="wrap_content"
-            android:textSize="20sp"
-            android:textStyle="bold"
             android:layout_height="wrap_content"
-            android:layout_marginTop="330dp"
             android:layout_centerHorizontal="true"
-            android:text="@string/streaming"/>
+            android:layout_marginTop="330dp"
+            android:text="@string/streaming"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true">
+
             <ImageView
                 android:id="@+id/fist"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:layout_marginTop="400dp"
-                android:clickable="true"
-                android:tint="@color/colorInactive"
-                android:src="@mipmap/fist"
-                android:layout_marginBottom="20dp"
                 android:layout_marginLeft="5dp"
-                />
+                android:layout_marginTop="400dp"
+                android:layout_marginBottom="20dp"
+                android:clickable="true"
+                android:src="@mipmap/fist"
+                android:tint="@color/colorInactive" />
+
             <ImageView
                 android:id="@+id/thumb"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_marginTop="400dp"
-                android:clickable="true"
-                android:tint="@color/colorInactive"
                 android:layout_marginBottom="20dp"
-                android:src="@mipmap/thumb"/>
+                android:clickable="true"
+                android:src="@mipmap/thumb"
+                android:tint="@color/colorInactive" />
+
             <ImageView
                 android:id="@+id/palm"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_marginTop="400dp"
-                android:clickable="true"
-                android:tint="@color/colorInactive"
                 android:layout_marginBottom="20dp"
-                android:src="@mipmap/palm"/>
+                android:clickable="true"
+                android:src="@mipmap/palm"
+                android:tint="@color/colorInactive" />
+
             <ImageView
                 android:id="@+id/point"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_marginTop="400dp"
-                android:clickable="true"
-                android:tint="@color/colorInactive"
                 android:layout_marginBottom="20dp"
-                android:src="@mipmap/point"/>
+                android:clickable="true"
+                android:src="@mipmap/point"
+                android:tint="@color/colorInactive" />
+
             <ImageView
                 android:id="@+id/peace"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_marginTop="400dp"
-                android:clickable="true"
-                android:tint="@color/colorInactive"
+                android:layout_marginRight="5dp"
                 android:layout_marginBottom="20dp"
+                android:clickable="true"
                 android:src="@mipmap/peace"
-                android:layout_marginRight="5dp"/>
+                android:tint="@color/colorInactive" />
         </LinearLayout>
 
         <Switch
             android:id="@+id/cloud_switch"
-            android:text="@string/switch_label_text"
-            android:switchPadding="10dp"
-            android:thumbTint="@color/colorMain"
-            android:layout_marginTop="460dp"
-            android:textColor="@color/colorInactive"
-            android:layout_centerHorizontal="true"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="460dp"
+            android:switchPadding="10dp"
+            android:text="@string/switch_label_text"
+            android:textColor="@color/colorInactive"
+            android:thumbTint="@color/colorMain" />
+
+        <LinearLayout
+            android:id="@+id/settings_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="600dp"
+            android:clickable="true">
+
+            <ImageView
+                android:id="@+id/settings_icon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="20dp"
+                android:clickable="true"
+                android:src="@mipmap/settings"
+                android:tint="@color/colorInactive" />
+
+            <TextView
+                android:id="@+id/settings_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:text="@string/settings_label"
+                android:textColor="@color/colorInactive"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
 
     </RelativeLayout>

@@ -3,14 +3,17 @@ package me.symlab.kirill.sparthanmobile;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -53,6 +56,7 @@ public class MainActivity extends Activity {
     private static int CLASSIFICATION_INTERVAL = 600;
     private String P2C_SERVER_URI = "http://192.168.137.1/";
     private int P2B_SERVER_PORT = 5000;
+    private AsyncHttpPost[] post;
 
     public enum GESTURES {
         POINT("POINT"),
@@ -108,18 +112,19 @@ public class MainActivity extends Activity {
     private int activeId = -1;
     private boolean useCloud = false;
 
+    private void initCNN() {
+        try {
+            Interpreter.Options options = new Interpreter.Options();
+            tflite = new Interpreter(Utils.loadModelFile(MainActivity.this, modelFile), options);
+            tflite.resizeInput(0, new int[]{BATCH_SIZE, IMG_Y, IMG_X, 1});
+            inp = ByteBuffer.allocateDirect(BATCH_SIZE * IMG_Y * IMG_X * (Float.SIZE / Byte.SIZE));
+            out = new long[BATCH_SIZE][1];
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-    @SuppressLint("CheckResult")
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.activity_main);
-        TextView searchLabel = findViewById(R.id.search_label);
-        TextView connectLabel = findViewById(R.id.connect_label);
-        TextView streamLabel = findViewById(R.id.stream_label);
-
-        // GUI
+    private void initGUI() {
         getWindow().getDecorView().setBackgroundColor(Color.WHITE);
         Animation connectingAnimation = AnimationUtils.loadAnimation(this, R.anim.animation);
         ImageView circle = findViewById(R.id.circle);
@@ -139,6 +144,26 @@ public class MainActivity extends Activity {
             useCloud = isChecked;
         });
 
+        // settings button
+        View settingsButton = findViewById(R.id.settings_button);
+        ImageView settingsIcon = findViewById(R.id.settings_icon);
+        TextView settingsLabel = findViewById(R.id.settings_label);
+        settingsIcon.setColorFilter(R.color.colorInactive);
+        View.OnClickListener listener = (view) -> {
+            RotateAnimation rotateAnimation = new RotateAnimation(0, 45,
+                    Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+            rotateAnimation.setDuration(500L);
+            rotateAnimation.setRepeatCount(0);
+            settingsIcon.startAnimation(rotateAnimation);
+            settingsIcon.setColorFilter(R.color.colorPrimary);
+            settingsLabel.setTextColor(getResources().getColor(R.color.colorMain, getTheme()));
+            startActivity(new Intent(this, SettingsActivity.class));
+        };
+        settingsButton.setOnClickListener(listener);
+        settingsIcon.setOnClickListener(listener);
+    }
+
+    private void initComms() {
         //HTTP Server
         Handler serverThread = new Handler();
         serverThread.post(new Runnable() {
@@ -151,20 +176,13 @@ public class MainActivity extends Activity {
         });
 
         //HTTP Client
-        final AsyncHttpPost[] post = {new AsyncHttpPost(P2C_SERVER_URI)};
+        post = new AsyncHttpPost[]{new AsyncHttpPost(P2C_SERVER_URI)};
+    }
 
-        // LOADING MODEL
-        try {
-            Interpreter.Options options = new Interpreter.Options();
-            tflite = new Interpreter(Utils.loadModelFile(MainActivity.this, modelFile), options);
-            tflite.resizeInput(0, new int[]{BATCH_SIZE, IMG_Y, IMG_X, 1});
-            inp = ByteBuffer.allocateDirect(BATCH_SIZE * IMG_Y * IMG_X * (Float.SIZE / Byte.SIZE));
-            out = new long[BATCH_SIZE][1];
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
+    private void initMYO() {
+        TextView searchLabel = findViewById(R.id.search_label);
+        TextView connectLabel = findViewById(R.id.connect_label);
+        TextView streamLabel = findViewById(R.id.stream_label);
         Myonnaise myonnaise = new Myonnaise(this);
         myonnaise.getMyo(NOT_MY_MYO_ADDRESS).subscribeWith(new DisposableSingleObserver<Myo>() {
             @Override
@@ -205,8 +223,9 @@ public class MainActivity extends Activity {
                 Log.d(TAG, "onError: Failed to connect to myo");
             }
         });
+    }
 
-        // CLASSIFICATION ROUTINE
+    private void startCR() {
         final long interval = CLASSIFICATION_INTERVAL;
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -235,7 +254,7 @@ public class MainActivity extends Activity {
                                 return;
                             }
                             long start = -1L;
-                            if (result.contains("_")){
+                            if (result.contains("_")) {
                                 String[] splitted = result.split("_");
                                 gesture = splitted[0];
                                 start = Long.parseLong(splitted[1]);
@@ -267,11 +286,29 @@ public class MainActivity extends Activity {
                     viewId[0] = gesturesImages.get(GESTURES.valueOf(gesture));
                     out = new long[BATCH_SIZE][1];
                     long endTime = SystemClock.uptimeMillis();
-//                    Log.d(TAG, String.valueOf(endTime - startTime));
+                    Log.d(TAG, String.valueOf(endTime - startTime));
                     runOnUiThread(() -> highlightGesture(viewId[0]));
                 }
             }
         }, interval, interval);
+    }
+
+    @SuppressLint("CheckResult")
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.activity_main);
+        // GUI
+        this.initGUI();
+        //Networking
+//        this.initComms();
+        // LOADING MODEL
+//        this.initCNN();
+        // MYO
+//        this.initMYO();
+        // CLASSIFICATION ROUTINE
+//        this.startCR();
     }
 
     private void highlightGesture(int id) {
