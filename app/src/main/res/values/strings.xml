@@ -15,4 +15,9 @@
     <string name="classifiers_label">Classifiers</string>
     <string name="connectivity_label">Connectivity</string>
     <string name="number_of_gestures_label">Number of gestures:</string>
+    <string name="button_manual_text">Manual</string>
+    <string name="button_auto_text">Auto</string>
+    <string name="udp">UDP</string>
+    <string name="tcp">TCP</string>
+    <string name="http">HTTP</string>
 </resources>

@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="100dp">
+            android:layout_marginTop="90dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -48,9 +48,37 @@
                 />
             <Spinner
                 android:id="@+id/num_gestures_selector"
-                android:layout_width="30dp"
-
+                android:layout_width="wrap_content"
+                android:background="#FFFFFF"
+                android:textColor="#000000"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="7dp"
                 android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="160dp">
+
+            <Button
+                android:id="@+id/button_auto"
+                android:layout_width="100dp"
+                android:text="@string/button_auto_text"
+                android:background="#FFFFFF"
+                android:textColor="@color/colorInactive"
+                android:layout_height="40dp" />
+
+            <Button
+                android:id="@+id/button_manual"
+                android:text="@string/button_manual_text"
+                android:layout_width="100dp"
+                android:background="#FFFFFF"
+                android:textColor="@color/colorInactive"
+                android:layout_height="40dp" />
+
 
         </LinearLayout>
 
@@ -64,6 +92,40 @@
             android:textColor="@color/colorMain"
             android:textSize="20sp"
             android:textStyle="bold" />
+
+        <RadioGroup
+            android:layout_width="wrap_content"
+            android:layout_marginTop="360dp"
+            android:id="@+id/connectivity_radio_group"
+            android:background="#FFFFFF"
+            android:textColor="@color/colorInactive"
+            android:layout_centerHorizontal="true"
+            android:layout_height="wrap_content">
+            <RadioButton
+                android:id="@+id/udp_button"
+                android:text="@string/udp"
+                android:background="#FFFFFF"
+                android:textColor="@color/colorInactive"
+                android:layout_width="wrap_content"
+                android:buttonTint="@color/colorMain"
+                android:layout_height="wrap_content" />
+            <RadioButton
+                android:id="@+id/tcp_button"
+                android:text="@string/tcp"
+                android:buttonTint="@color/colorMain"
+                android:layout_width="wrap_content"
+                android:background="#FFFFFF"
+                android:textColor="@color/colorInactive"
+                android:layout_height="wrap_content" />
+            <RadioButton
+                android:id="@+id/http_button"
+                android:text="@string/http"
+                android:buttonTint="@color/colorMain"
+                android:layout_width="wrap_content"
+                android:background="#FFFFFF"
+                android:textColor="@color/colorInactive"
+                android:layout_height="wrap_content" />
+        </RadioGroup>
 
         <LinearLayout
             android:id="@+id/back_button"
@@ -92,6 +154,7 @@
                 android:textColor="@color/colorInactive"
                 android:textSize="20sp"
                 android:textStyle="bold" />
+
         </LinearLayout>
 
 
