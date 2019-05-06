@@ -4,10 +4,10 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.StrictMode;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
@@ -15,14 +15,9 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.koushikdutta.async.http.AsyncHttpClient;
-import com.koushikdutta.async.http.AsyncHttpPost;
-import com.koushikdutta.async.http.AsyncHttpResponse;
-import com.koushikdutta.async.http.body.MultipartFormDataBody;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.ncorti.myonnaise.Myo;
 import com.ncorti.myonnaise.MyoStatus;
@@ -43,21 +38,30 @@ import java.util.TimerTask;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
+import me.symlab.kirill.sparthanmobile.Utils.EasyCallable;
 import me.symlab.kirill.sparthanmobile.Utils.SettingsStore;
 import me.symlab.kirill.sparthanmobile.Utils.Utils;
+import me.symlab.kirill.sparthanmobile.Utils.networking.Client;
+import me.symlab.kirill.sparthanmobile.Utils.networking.HTTPClient;
+import me.symlab.kirill.sparthanmobile.Utils.networking.UDPClient;
 
 public class MainActivity extends Activity {
     /* GENERAL */
     private static String TAG = "MYOSPARTHAN";
     private static String NOT_MY_MYO_ADDRESS = "EE:BF:D5:D9:3A:F7";
-    private static int IMG_X = 200;
-    private static int IMG_Y = 8;
+    public static int IMG_X = 200;
+    public static int IMG_Y = 8;
     private static int BATCH_SIZE = 1;
     private static int MYO_POLLING_FREQUENCY = 200;
     private static int CLASSIFICATION_INTERVAL = 600;
-    private String P2C_SERVER_URI = "http://192.168.137.1/";
+    private static final String P2C_IP = "192.168.137.1";
     private int P2B_SERVER_PORT = 5000;
-    private AsyncHttpPost[] post;
+    private Client client;
+    private static final int PORT = 80;
+
+    /* CALLBACKS */
+    private Runnable failCallback;
+    private EasyCallable<String> successCallback;
 
     public enum GESTURES {
         POINT("POINT"),
@@ -131,6 +135,8 @@ public class MainActivity extends Activity {
         circle.startAnimation(connectingAnimation);
         circle.setOnClickListener(view -> view.startAnimation(connectingAnimation));
         requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+        requestPermissions(new String[]{Manifest.permission.INTERNET}, 1);
+        requestPermissions(new String[]{Manifest.permission.ACCESS_WIFI_STATE}, 1);
         expandAnimation = AnimationUtils.loadAnimation(this, R.anim.a2);
 
         // settings button
@@ -150,7 +156,39 @@ public class MainActivity extends Activity {
         };
         settingsButton.setOnClickListener(listener);
         settingsIcon.setOnClickListener(listener);
+
+        initGestureButtons();
     }
+
+    private void initGestureButtons() {
+        gesturesImages.entrySet().forEach(entry ->
+        {
+            findViewById(entry.getValue()).setOnClickListener(view ->
+            {
+                //TODO get label from view.getId() + send command to board
+                client.send(Client.DummyPackage.getOne(), successCallback, failCallback);
+            });
+        });
+    }
+
+    private void initCallbacks() {
+        failCallback = () -> {
+            if (SettingsStore.getInstance().useCloud()) {
+                runOnUiThread(() ->
+                        Toast.makeText(getApplicationContext(), getString(R.string.SERVER_UNAVAILABLE), Toast.LENGTH_SHORT).show());
+            }
+        };
+
+        final int[] viewId = new int[1];
+        successCallback = (String g) -> {
+            gesture = g;
+            viewId[0] = gesturesImages.get(GESTURES.valueOf(gesture));
+            runOnUiThread(() -> {
+                highlightGesture(viewId[0]);
+            });
+        };
+    }
+
 
     private void initComms() {
         //HTTP Server
@@ -164,8 +202,15 @@ public class MainActivity extends Activity {
             }
         });
 
-        //HTTP Client
-        post = new AsyncHttpPost[]{new AsyncHttpPost(P2C_SERVER_URI)};
+        //Client
+        SettingsStore.Connectivity type = SettingsStore.getInstance().getConnectivity();
+        client = type == SettingsStore.Connectivity.HTTP ? new HTTPClient() :
+                type == SettingsStore.Connectivity.UDP ? new UDPClient() : null;
+        client.init(P2C_IP, PORT);
+
+        if(type == SettingsStore.Connectivity.UDP) {
+//            new Thread(new UDPClient.UDPClientListen()).start();
+        }
     }
 
     private void initMYO() {
@@ -223,51 +268,12 @@ public class MainActivity extends Activity {
                     return;
                 }
 
-                final int[] viewId = new int[1];
                 if (SettingsStore.getInstance().useCloud()) {
                     // Sending package to the cloud server to classify
-                    MultipartFormDataBody body = new MultipartFormDataBody();
-                    JSONArray value = new JSONArray(q);
-                    body.addStringPart("EMG_PACKAGE", value.toString());
-                    post[0].setBody(body);
-                    body.addStringPart("TIME", String.valueOf(SystemClock.uptimeMillis()));
-                    AsyncHttpClient.getDefaultInstance().executeString(post[0], new AsyncHttpClient.StringCallback() {
-                        @Override
-                        public void onCompleted(Exception ex, AsyncHttpResponse source, String result) {
-                            if (ex != null) {
-                                if (SettingsStore.getInstance().useCloud()) {
-                                    runOnUiThread(() ->
-                                            Toast.makeText(getApplicationContext(), getString(R.string.SERVER_UNAVAILABLE), Toast.LENGTH_SHORT).show());
-                                }
-                                post[0] = new AsyncHttpPost(P2C_SERVER_URI);
-                                return;
-                            }
-                            long start = -1L;
-                            if (result.contains("_")) {
-                                String[] splitted = result.split("_");
-                                gesture = splitted[0];
-                                start = Long.parseLong(splitted[1]);
-                            } else {
-                                gesture = result;
-                            }
-                            try {
-                                viewId[0] = gesturesImages.get(GESTURES.valueOf(gesture));
-                                long end = SystemClock.uptimeMillis();
-                                Log.d(TAG, String.valueOf(end - start));
-                            } catch (IllegalArgumentException e) {
-                                // Received garbage from server
-                                if (SettingsStore.getInstance().useCloud()) {
-                                    runOnUiThread(() ->
-                                            Toast.makeText(getApplicationContext(), getString(R.string.SERVER_UNAVAILABLE), Toast.LENGTH_SHORT).show());
-                                }
-                            }
-                            runOnUiThread(() -> {
-                                highlightGesture(viewId[0]);
-                            });
-                        }
-                    });
+                    client.send(new JSONArray(q), successCallback, failCallback);
                 } else {
                     // Classify gesture locally
+                    final int[] viewId = new int[1];
                     inp = Utils.convertT(q, BATCH_SIZE, IMG_X, IMG_Y);
                     long startTime = SystemClock.uptimeMillis();
                     tflite.run(inp, out);
@@ -287,7 +293,11 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Log.d(TAG, "onCreate: init()");
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
         setContentView(R.layout.activity_main);
+
         // GUI
         this.initGUI();
         //Networking
@@ -298,6 +308,8 @@ public class MainActivity extends Activity {
         this.initMYO();
         // CLASSIFICATION ROUTINE
         this.startCR();
+        // NETWORKING CALLBACKS
+        this.initCallbacks();
     }
 
     private void highlightGesture(int id) {

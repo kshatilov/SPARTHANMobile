@@ -25,7 +25,8 @@ public class SettingsStore {
     boolean useCloud;
 
     protected SettingsStore() {
-        connectivity = Connectivity.HTTP;
+//        connectivity = Connectivity.HTTP;
+        connectivity = Connectivity.UDP;
         numGestures = 5;
         manual = false;
         useCloud = false;
